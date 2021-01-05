@@ -1,6 +1,7 @@
 # AlphaAssistant
 
 Assistente Virtual Básico (Orientado a Objetos) utilizando: 
+
     >>> API Wolframalpha para ingestão de dados;
     >>> Lib da Wikipedia para ingestão de dados;
     >>> Lib PySimpleGUI para interface gráfica;
