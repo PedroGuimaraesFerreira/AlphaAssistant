@@ -1,0 +1,86 @@
+"""
+------------------------------------------- Alpha Assistant ----------------------------------------------------------------
+:Assistente Virtual Básico (Orientado a Objetos) utilizando: 
+    -> API Wolframalpha para ingestão de dados;
+    -> Lib da Wikipedia para ingestão de dados;
+    -> Lib PySimpleGUI para interface gráfica;
+    -> Lib pyttsx3 para leitura dinâmica do conteúdo/texto retornado pela interface.
+----------------------------------------------------------------------------------------------------------------------------
+***(Por limitações da API e Libs, o app roda apenas em inglês)
+
+"""
+
+import wolframalpha
+import wikipedia
+from chaveAPI import chave
+import PySimpleGUI as sg    
+import pyttsx3
+# engine = pyttsx3.init()
+
+class AlphaAssistant:
+    ENGINE = pyttsx3.init()
+    COR_TEMA = 'DarkBrown'
+    TEXTO_INPUT = 'Ask me anything'
+    BOTAO_VALIDAR = 'Ok'
+    BOTAO_INVALIDAR = 'Cancel'
+    TITULO_INTERFACE = 'Alpha Assistant'
+
+    def __init__(self, chave_api):
+        self.obj_cliente = wolframalpha.Client(chave)
+        self.tema_interface = sg.theme(self.COR_TEMA)
+        self.layout_interface = [
+            [sg.Text(self.TEXTO_INPUT), sg.InputText()],
+            [sg.Button(self.BOTAO_VALIDAR), sg.Button(self.BOTAO_INVALIDAR)]
+        ]
+        self.interface = sg.Window(
+            self.TITULO_INTERFACE, 
+            self.layout_interface
+        )
+
+    def executar(self):
+        """
+        Método que ingere dados via API do Wolframalpha e/ou
+        da lib da Wikipedia, retorna a informação na forma de
+        texto via janela/interface gráfica e lê o texto (em inglês)
+        para o usuário
+        """
+
+        em_execucao = True
+        while em_execucao:
+            evento, array_valores = self.interface.read()
+
+            # se o usuário fechar ou cancelar a aplicação/interface
+            if evento in [None, self.BOTAO_INVALIDAR]:
+                em_execucao = False
+                break
+
+            try:
+                # se nenhuma exceção foi levantada tanto para o retorno da wikipedia,
+                # quanto para a API do wolframalpha 
+                wiki_ret = wikipedia.summary(array_valores[0], sentences=2)
+                wolfram_ret = next(self.obj_cliente.query(array_valores[0]).results).text
+                self.ENGINE.say(wiki_ret)
+                sg.PopupNonBlocking(">>> "+wolfram_ret,">>> "+wiki_ret)
+
+            except wikipedia.exceptions.DisambiguationError:
+                wolfram_ret = next(self.obj_cliente.query(array_valores[0]).results).text
+                self.ENGINE.say(wolfram_ret)
+                sg.PopupNonBlocking(">>> "+wolfram_ret)
+            except wikipedia.exceptions.PageError:
+                wolfram_ret = next(self.obj_cliente.query(array_valores[0]).results).text
+                self.ENGINE.say(wolfram_ret)
+                sg.PopupNonBlocking(">>> "+wolfram_ret)
+            except:
+                wiki_ret = wikipedia.summary(array_valores[0], sentences=2)
+                self.ENGINE.say(wiki_ret)
+                sg.PopupNonBlocking(">>> "+wiki_ret)
+
+            self.ENGINE.runAndWait()
+
+            print (array_valores[0])
+
+        self.interface.close()
+
+if __name__ == "__main__":
+    assistente = AlphaAssistant(chave)
+    assistente.executar()
